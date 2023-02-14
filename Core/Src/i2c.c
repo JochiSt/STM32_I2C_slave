@@ -119,6 +119,57 @@ void HAL_I2C_MspDeInit(I2C_HandleTypeDef* i2cHandle)
 
 /* USER CODE BEGIN 1 */
 
-/* USER CODE END 1 */
+// emulated I2C RAM
+static uint8_t ram[256];
+static uint8_t offset;  // index of current RAM cell
+static uint8_t first=1; // first byte --> new offset
 
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+#define PRINTF(...) printf(__VA_ARGS__)
+
+void HAL_I2C_ListenCpltCallback(I2C_HandleTypeDef *hi2c)
+{
+  PRINTF("LCB\n");
+  first = 1;
+  HAL_I2C_EnableListen_IT(hi2c); // slave is ready again
+}
+
+void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, uint16_t AddrMatchCode)
+{
+  PRINTF("ACB %s\n", TransferDirection==I2C_DIRECTION_RECEIVE ? "rx" : "tx" );
+  //HAL_GPIO_WritePin( LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET );
+  if( TransferDirection==I2C_DIRECTION_TRANSMIT ) {
+    if( first ) {
+      HAL_I2C_Slave_Seq_Receive_IT(hi2c, &offset, 1, I2C_NEXT_FRAME);
+    } else {
+      HAL_I2C_Slave_Seq_Receive_IT(hi2c, &ram[offset], 1, I2C_NEXT_FRAME);
+    }
+  } else {
+    HAL_I2C_Slave_Seq_Transmit_IT(hi2c, &ram[offset], 1, I2C_NEXT_FRAME);
+  }
+  //HAL_GPIO_WritePin( LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET );
+}
+
+void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c)
+{
+  //HAL_GPIO_WritePin( PA6_GPIO_Port, PA6_Pin, GPIO_PIN_SET );
+  if(first) {
+    PRINTF("RXCB: offset <== %3d\n", offset );
+    first = 0;
+  } else {
+    PRINTF("RXCB: ram[%3d] <== %3d\n", offset,  ram[offset] );
+    offset++;
+  }
+  HAL_I2C_Slave_Seq_Receive_IT(hi2c, &ram[offset], 1, I2C_NEXT_FRAME);
+  //HAL_GPIO_WritePin(PA6_GPIO_Port, PA6_Pin, GPIO_PIN_RESET );
+}
+
+void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef *hi2c)
+{
+  //HAL_GPIO_WritePin( PA7_GPIO_Port, PA7_Pin, GPIO_PIN_SET );
+  PRINTF("TXCB: ram[%3d] ==> %3d\n", offset, ram[offset] );
+  offset++;
+  HAL_I2C_Slave_Seq_Transmit_IT(hi2c, &ram[offset], 1, I2C_NEXT_FRAME);
+  //HAL_GPIO_WritePin( PA7_GPIO_Port, PA7_Pin, GPIO_PIN_RESET );
+}
+
+/* USER CODE END 1 */

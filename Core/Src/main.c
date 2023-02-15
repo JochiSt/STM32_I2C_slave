@@ -90,6 +90,20 @@ int main(void)
   MX_I2C2_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
+  HAL_GPIO_WritePin( LED_GN_GPIO_Port, LED_GN_Pin, GPIO_PIN_SET );
+  HAL_Delay(500);
+  HAL_GPIO_WritePin( LED_YL_GPIO_Port, LED_YL_Pin, GPIO_PIN_SET );
+  HAL_Delay(500);
+  HAL_GPIO_WritePin( LED_RD_GPIO_Port, LED_RD_Pin, GPIO_PIN_SET );
+  HAL_Delay(500);
+
+  HAL_GPIO_WritePin( LED_GN_GPIO_Port, LED_GN_Pin, GPIO_PIN_RESET );
+  HAL_Delay(500);
+  HAL_GPIO_WritePin( LED_YL_GPIO_Port, LED_YL_Pin, GPIO_PIN_RESET );
+  HAL_Delay(500);
+  HAL_GPIO_WritePin( LED_RD_GPIO_Port, LED_RD_Pin, GPIO_PIN_RESET );
+  HAL_Delay(500);
+
   printf("enabling I2C listen interrupt...\r\n");
   HAL_I2C_EnableListen_IT(&hi2c2);
   /* USER CODE END 2 */

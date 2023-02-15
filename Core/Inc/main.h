@@ -62,7 +62,7 @@ void Error_Handler(void);
 #define BOARD_LED_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
-
+#define STDOUT_UART huart1
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

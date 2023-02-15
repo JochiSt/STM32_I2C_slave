@@ -23,6 +23,7 @@
 /* USER CODE BEGIN 0 */
 
 #include <stdio.h>
+#include "gpio.h"
 
 /* USER CODE END 0 */
 
@@ -136,7 +137,9 @@ void HAL_I2C_ListenCpltCallback(I2C_HandleTypeDef *hi2c)
 void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, uint16_t AddrMatchCode)
 {
   PRINTF("ACB %s\n", TransferDirection==I2C_DIRECTION_RECEIVE ? "rx" : "tx" );
-  //HAL_GPIO_WritePin( LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET );
+
+  HAL_GPIO_WritePin( LED_GN_GPIO_Port, LED_GN_Pin, GPIO_PIN_RESET );
+
   if( TransferDirection==I2C_DIRECTION_TRANSMIT ) {
     if( first ) {
       HAL_I2C_Slave_Seq_Receive_IT(hi2c, &offset, 1, I2C_NEXT_FRAME);
@@ -146,7 +149,8 @@ void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, ui
   } else {
     HAL_I2C_Slave_Seq_Transmit_IT(hi2c, &ram[offset], 1, I2C_NEXT_FRAME);
   }
-  //HAL_GPIO_WritePin( LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET );
+
+  HAL_GPIO_WritePin( LED_GN_GPIO_Port, LED_GN_Pin, GPIO_PIN_SET );
 }
 
 void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c)

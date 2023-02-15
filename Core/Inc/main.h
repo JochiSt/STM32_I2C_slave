@@ -64,6 +64,8 @@ void Error_Handler(void);
 #define BOARD_LED_GPIO_Port GPIOB
 #define LED_GN_Pin GPIO_PIN_4
 #define LED_GN_GPIO_Port GPIOB
+#define LED_YL_Pin GPIO_PIN_5
+#define LED_YL_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 #define STDOUT_UART huart1

@@ -89,6 +89,7 @@ int main(void)
   MX_GPIO_Init();
   MX_I2C2_Init();
   MX_USART1_UART_Init();
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
   printf("enabling I2C listen interrupt...\r\n");
 

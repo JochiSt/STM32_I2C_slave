@@ -24,6 +24,10 @@
 
 #include <stdio.h>
 
+uint8_t getMasterInput = 0;
+uint8_t getTransferDirection = 0;
+uint8_t Xfer_Complete = 0;
+
 /* USER CODE END 0 */
 
 I2C_HandleTypeDef hi2c1;
@@ -196,5 +200,20 @@ void HAL_I2C_MspDeInit(I2C_HandleTypeDef* i2cHandle)
 }
 
 /* USER CODE BEGIN 1 */
+
+void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, uint16_t AddrMatchCode) {
+  getMasterInput = 1;
+  getTransferDirection = TransferDirection;
+}
+
+void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef *I2cHandle){
+  Xfer_Complete = 1;
+}
+
+
+void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *I2cHandle){
+  Xfer_Complete = 1;
+}
+
 
 /* USER CODE END 1 */

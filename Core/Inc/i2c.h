@@ -37,6 +37,9 @@ extern I2C_HandleTypeDef hi2c1;
 extern I2C_HandleTypeDef hi2c2;
 
 /* USER CODE BEGIN Private defines */
+extern uint8_t getMasterInput;
+extern uint8_t getTransferDirection;
+extern uint8_t Xfer_Complete;
 
 /* USER CODE END Private defines */
 

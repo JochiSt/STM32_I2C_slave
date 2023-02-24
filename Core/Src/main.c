@@ -86,23 +86,35 @@ int main(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
-  MX_GPIO_Init();
   MX_I2C2_Init();
-  MX_USART1_UART_Init();
   MX_I2C1_Init();
+
+  MX_GPIO_Init();
+  MX_USART1_UART_Init();
+
   /* USER CODE BEGIN 2 */
-  printf("enabling I2C listen interrupt...\r\n");
 
-  #define MASTER_REQ_READ    0x12
-  #define MASTER_REQ_WRITE   0x34
+  /* Buffer used for transmission */
+  uint8_t aTxBuffer[3];
 
-  #define RXBUFFERSIZE 16
+  #define COUNTOF(__BUFFER__)   (sizeof(__BUFFER__) / sizeof(*(__BUFFER__)))
+  /* Size of Transmission buffer */
+  #define TXBUFFERSIZE                      (COUNTOF(aTxBuffer))
+  /* Size of Reception buffer */
+  #define RXBUFFERSIZE                      TXBUFFERSIZE
+  /* USER CODE END Includes */
+
+  /* USER CODE BEGIN PTD */
+  //__IO uint32_t     Transfer_Direction = 0;
 
   /* Buffer used for reception */
-  uint8_t aRxBuffer[RXBUFFERSIZE];
-  uint8_t aTxBuffer[] = "1234567890123456";
-  uint16_t hTxNumData = 0, hRxNumData = 0;
-  uint8_t bTransferRequest = 0;
+  uint8_t aRxBuffer[1];
+
+  printf("enabling I2C listen interrupt...\r\n");
+  if (HAL_I2C_EnableListen_IT(&hi2c2) != HAL_OK) {
+    /* Transfer error in reception process */
+    Error_Handler();
+  }
 
   /* USER CODE END 2 */
 
@@ -110,106 +122,43 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    // source code from:
+    // https://st.my.site.com/community/s/article/how-to-create-an-i2c-slave-device-using-the-stm32cube-library
+    if (getMasterInput == 1) {
+      getMasterInput = 0;
+      if (getTransferDirection == 0) {
+        if (HAL_I2C_Slave_Seq_Transmit_IT(&hi2c2, (uint8_t*) aTxBuffer, TXBUFFERSIZE, I2C_NEXT_FRAME) != HAL_OK)
+        {
+          printf("ERR SLAVE SEQ TX\n");
+          Error_Handler();
+        }
+      } else {
+        if (HAL_I2C_Slave_Seq_Receive_IT(&hi2c2, (uint8_t*) aRxBuffer, RXBUFFERSIZE, I2C_NEXT_FRAME) != HAL_OK)
+        {
+          printf("ERR SLAVE SEQ RX\n");
+          Error_Handler();
+        } else {
+          HAL_Delay(1 * RXBUFFERSIZE);
+        }
+      }
+      //GPIOG->BSRR = DBG_PIN_Pin;
+    }
+
+    //HAL_GPIO_WritePin(GPIOG, DBG_PIN_Pin, GPIO_PIN_RESET);
+
+    if (Xfer_Complete == 1) {
+      //  HAL_Delay(1);
+      /*##- Put I2C peripheral in listen mode proces ###########################*/
+      printf("enabling I2C listen interrupt...\r\n");
+      if (HAL_I2C_EnableListen_IT(&hi2c2) != HAL_OK) {
+        /* Transfer error in reception process */
+        printf("ERR IRQ ENABLE\n");
+        Error_Handler();
+      }
+      Xfer_Complete = 0;
+    }
     /* USER CODE END WHILE */
-    //https://github.com/STMicroelectronics/STM32CubeF1/blob/master/Projects/STM32F103RB-Nucleo/Examples/I2C/I2C_TwoBoards_AdvComIT/Src/main.c
-      /* Initialize number of data variables */
-      hTxNumData = 0;
-      hRxNumData = 0;
 
-      /*##-2- Slave receive request from master ################################*/
-      printf("SR ?\n");
-      while(HAL_I2C_Slave_Receive_IT(&hi2c2, (uint8_t*)&bTransferRequest, 1)!= HAL_OK)
-      {
-      }
-
-      /*  Before starting a new communication transfer, you need to check the current
-      state of the peripheral; if it’s busy you need to wait for the end of current
-      transfer before starting a new one.
-      For simplicity reasons, this example is just waiting till the end of the
-      transfer, but application may perform other tasks while transfer operation
-      is ongoing. */
-      printf("RDY?\n");
-      while (HAL_I2C_GetState(&hi2c2) != HAL_I2C_STATE_READY)
-      {
-      }
-
-      printf("Transfer Request 0x%x\n", bTransferRequest);
-      /* If master request write operation #####################################*/
-      if (bTransferRequest == MASTER_REQ_WRITE)
-      {
-        printf("Master Write\n");
-        /*##-3- Slave receive number of data to be read ########################*/
-        while(HAL_I2C_Slave_Receive(&hi2c2, (uint8_t*)&hRxNumData, 2, 0xFFFF)!= HAL_OK);
-
-        /*  Before starting a new communication transfer, you need to check the current
-        state of the peripheral; if it’s busy you need to wait for the end of current
-        transfer before starting a new one.
-        For simplicity reasons, this example is just waiting till the end of the
-        transfer, but application may perform other tasks while transfer operation
-        is ongoing. */
-        printf(" - RDY?\n");
-        while (HAL_I2C_GetState(&hi2c2) != HAL_I2C_STATE_READY)
-        {
-        }
-        printf(" - Nbytes 0x%x\n", hRxNumData);
-
-        printf(" - RX!\n");
-        /*##-4- Slave receives aRxBuffer from master ###########################*/
-        while(HAL_I2C_Slave_Receive(&hi2c2, (uint8_t*)aRxBuffer, hRxNumData, 0xFFFF)!= HAL_OK);
-
-        /*  Before starting a new communication transfer, you need to check the current
-        state of the peripheral; if it’s busy you need to wait for the end of current
-        transfer before starting a new one.
-        For simplicity reasons, this example is just waiting till the end of the
-        transfer, but application may perform other tasks while transfer operation
-        is ongoing. */
-        printf(" - RDY?\n");
-        while (HAL_I2C_GetState(&hi2c2) != HAL_I2C_STATE_READY)
-        {
-        }
-
-        printf(" - done\n");
-        /* Toggle LED2 */
-        //BSP_LED_Toggle(LED2);
-      }
-      /* If master request write operation #####################################*/
-      else if (bTransferRequest == MASTER_REQ_READ)
-      {
-        printf("Master Read\n");
-        /*##-3- Slave receive number of data to be written #####################*/
-        while(HAL_I2C_Slave_Receive(&hi2c2, (uint8_t*)&hTxNumData, 2, 0xFFFF)!= HAL_OK);
-
-        /*  Before starting a new communication transfer, you need to check the current
-        state of the peripheral; if it’s busy you need to wait for the end of current
-        transfer before starting a new one.
-        For simplicity reasons, this example is just waiting till the end of the
-        transfer, but application may perform other tasks while transfer operation
-        is ongoing. */
-        printf(" - RDY?\n");
-        while (HAL_I2C_GetState(&hi2c2) != HAL_I2C_STATE_READY)
-        {
-        }
-        printf(" - Nbytes 0x%x\n", hTxNumData);
-
-        printf(" - TX!\n");
-        /*##-4- Slave transmit aTxBuffer to master #############################*/
-        while(HAL_I2C_Slave_Transmit(&hi2c2, (uint8_t*)aTxBuffer, hTxNumData, 0xFFFF)!= HAL_OK);
-
-        /*  Before starting a new communication transfer, you need to check the current
-        state of the peripheral; if it’s busy you need to wait for the end of current
-        transfer before starting a new one.
-        For simplicity reasons, this example is just waiting till the end of the
-        transfer, but application may perform other tasks while transfer operation
-        is ongoing. */
-
-        printf(" - RDY?\n");
-        while (HAL_I2C_GetState(&hi2c2) != HAL_I2C_STATE_READY)
-        {
-          printf("   - current state: 0x%x\n", HAL_I2C_GetState(&hi2c2));
-          HAL_Delay(1000);
-        }
-        printf(" - done\n");
-      }
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -268,6 +217,8 @@ void Error_Handler(void)
   __disable_irq();
   while (1)
   {
+    printf("ERROR!\n");
+    HAL_Delay(1000);
   }
   /* USER CODE END Error_Handler_Debug */
 }

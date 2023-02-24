@@ -1,0 +1,3 @@
+[submodule "STM32-HAL-I2C-Peripheral-Library"]
+	path = STM32-HAL-I2C-Peripheral-Library
+	url = https://github.com/Jana-Marie/STM32-HAL-I2C-Peripheral-Library.git

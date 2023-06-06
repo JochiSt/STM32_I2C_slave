@@ -139,12 +139,13 @@ void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, ui
   //HAL_GPIO_WritePin( LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET );
   if( TransferDirection==I2C_DIRECTION_TRANSMIT ) {
     if( first ) {
-      HAL_I2C_Slave_Seq_Receive_IT(hi2c, &offset, 1, I2C_NEXT_FRAME);
+      HAL_I2C_Slave_Seq_Receive_IT(hi2c, &offset, 1, I2C_FIRST_FRAME);
     } else {
-      HAL_I2C_Slave_Seq_Receive_IT(hi2c, &ram[offset], 1, I2C_NEXT_FRAME);
+      HAL_I2C_Slave_Seq_Receive_IT(hi2c, &ram[offset], 1, I2C_FIRST_FRAME);
     }
   } else {
-    HAL_I2C_Slave_Seq_Transmit_IT(hi2c, &ram[offset], 1, I2C_NEXT_FRAME);
+    //HAL_I2C_SlaveTxCpltCallback(hi2c);
+    HAL_I2C_Slave_Seq_Transmit_IT(hi2c, &ram[offset], 1, I2C_FIRST_FRAME);
   }
   //HAL_GPIO_WritePin( LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET );
 }

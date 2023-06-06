@@ -86,12 +86,10 @@ int main(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
-  MX_I2C2_Init();
-  MX_I2C1_Init();
-
   MX_GPIO_Init();
+  MX_I2C2_Init();
   MX_USART1_UART_Init();
-
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 
   /* Buffer used for transmission */
